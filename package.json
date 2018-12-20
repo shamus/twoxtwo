@@ -1,0 +1,17 @@
+{
+  "name": "twoxtwo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "elm:install": "elm install",
+    "elm:make": "elm make ./src/Main.elm --output=./dist/app.js;",
+    "http:server": "python -m SimpleHTTPServer 3000"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "elm": "^0.19.0-bugfix2"
+  }
+}
