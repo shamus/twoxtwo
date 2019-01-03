@@ -41,3 +41,99 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
+
+/* twoxtwo */
+
+html, body {
+  height: 100%;
+}
+
+.l-workspace {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.txt-graph {
+  flex: 1;
+  padding: 30px;
+  background-color: #F4FBFF;
+}
+
+.txt-graph svg {
+  display: block;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+}
+
+.txt-graph__axis {
+  stroke: black;
+}
+
+.txt-graph__axis-label-container {
+  display: inline-block;
+}
+
+.txt-graph__x .txt-graph__axis-label {
+  margin-left: -100%;
+  text-align: right;
+}
+
+.txt-graph__y .txt-graph__axis-label {
+  transform: rotate(90deg);
+  margin-left: -50%;
+  margin-top: 50%;
+}
+
+.txt-cards {
+  flex: 0 0 auto;
+  width: 400px;
+  background-color: #EAEDEF;
+  padding: 20px;
+}
+
+.txt-graph__axis-label {
+  font-size: 16px;
+  background-color: #F4FBFF;
+  border: solid 1px black;
+}
+
+.txt-graph__axis-label:focus {
+  outline: none;
+}
+
+.txt-card {
+  background-color: white;
+  text-align: center;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.txt-cards__new {
+  display: flex;
+  margin: auto;
+  border-radius: 50%;
+  font-size: 20px;
+  border: solid 1px #DADDDF;
+  height: 50px;
+  width: 50px;
+  align-items: center;
+  justify-content: center;
+}
+
+.txt-card__form-text {
+  width: 100%;
+  background-color: white;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  border: solid 1px #DADDDF;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.txt-graph__placing {
+  position: absolute;
+}

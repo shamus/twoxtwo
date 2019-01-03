@@ -4,17 +4,20 @@ import Html
 import Url exposing (Url)
 
 import Route exposing (Route)
+import TwoByTwo
 
 type Model
   = Redirect Nav.Key
   | NotFound Nav.Key
-  | TwoByTwo Nav.Key
+  | TwoByTwo TwoByTwo.Model
 
 type Msg
     = NoOp
-    | ChangedRoute ( Maybe Route )
-    | ChangedUrl Url
-    | ClickedLink Browser.UrlRequest
+    | ChangeRouteAndReplaceUrl ( Maybe Route )
+    | ChangeRoute ( Maybe Route )
+    | ChangeUrl Url
+    | ClickLink Browser.UrlRequest
+    | UpdateTwoByTwo TwoByTwo.Msg
 
 toNavKey : Model -> Nav.Key
 toNavKey model =
@@ -25,8 +28,16 @@ toNavKey model =
     NotFound key ->
       key
 
-    TwoByTwo key ->
-      key
+    TwoByTwo submodel ->
+      submodel.navKey
+
+mapUpdate : (model -> Model) -> (msg -> Msg) -> (model, Cmd msg) -> (Model, Cmd Msg)
+mapUpdate modelMapper cmdMapper (model, cmd) =
+  (modelMapper model, Cmd.map cmdMapper cmd)
+
+mapView : (msg -> Msg) -> Document msg -> Document Msg
+mapView toMsg {title, body} =
+  { title = title,  body = List.map (Html.map toMsg) body }
 
 replaceUrl : Nav.Key -> Route -> Cmd Msg
 replaceUrl key route =
@@ -44,10 +55,21 @@ changeRouteTo maybeRoute model =
       ( model, replaceUrl navKey Route.Root )
 
     Just Route.CreateTwoByTwo ->
-      ( TwoByTwo navKey, replaceUrl navKey ( Route.TwoByTwo "id" ) )
+      let toMsg result =
+            case result of
+              Ok data ->
+                let route = Route.TwoByTwo data.uuid in
+                ChangeRouteAndReplaceUrl (Just route)
 
-    Just _ ->
-      ( model, Cmd.none )
+              Err error ->
+                NoOp
+      in
+
+      ( Redirect navKey, TwoByTwo.create toMsg )
+
+    Just (Route.TwoByTwo uuid) ->
+      TwoByTwo.init navKey uuid
+      |> mapUpdate TwoByTwo UpdateTwoByTwo
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url navKey =
@@ -59,7 +81,18 @@ update msg model =
     ( NoOp, _ ) ->
       ( model, Cmd.none )
 
-    ( ClickedLink urlRequest, _ ) ->
+    ( ChangeRouteAndReplaceUrl (Just route), _ ) ->
+      let replaceCmd = replaceUrl (toNavKey model) route in
+      changeRouteTo (Just route) model
+      |> (\(updatedModel, cmd) -> ( updatedModel, Cmd.batch [ cmd, replaceCmd ] ))
+
+    ( ChangeRoute route, _ ) ->
+      changeRouteTo route model
+
+    ( ChangeUrl url, _ ) ->
+      changeRouteTo (Route.fromUrl url) model
+
+    ( ClickLink urlRequest, _ ) ->
       case urlRequest of
         Browser.Internal url ->
           case url.fragment of
@@ -72,11 +105,12 @@ update msg model =
         Browser.External href ->
           ( model , Nav.load href )
 
-    ( ChangedUrl url, _ ) ->
-      changeRouteTo (Route.fromUrl url) model
+    ( UpdateTwoByTwo subMsg, TwoByTwo subModel ) ->
+      TwoByTwo.update subMsg subModel
+      |> mapUpdate TwoByTwo UpdateTwoByTwo
 
-    ( ChangedRoute route, _ ) ->
-      changeRouteTo route model
+    ( _, _ ) ->
+      ( model, Cmd.none )
 
 view : Model -> Document Msg
 view model =
@@ -91,17 +125,15 @@ view model =
       , body = [ Html.text "found TK" ]
       }
 
-    TwoByTwo  _ ->
-      { title = "it's a graph y'all"
-      , body = [ Html.text "graph" ]
-      }
+    TwoByTwo subModel ->
+      TwoByTwo.view subModel |> mapView UpdateTwoByTwo
 
 main : Program () Model Msg
 main =
   Browser.application
     { init = init
-    , onUrlChange = ChangedUrl
-    , onUrlRequest = ClickedLink
+    , onUrlChange = ChangeUrl
+    , onUrlRequest = ClickLink
     , subscriptions = (\_ -> Sub.none)
     , update = update
     , view = view

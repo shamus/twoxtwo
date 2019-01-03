@@ -1,7 +1,7 @@
 module Route exposing (Route(..), fromUrl, toString)
 
 import Url exposing (Url)
-import Url.Parser as Parser exposing (Parser, oneOf, string)
+import Url.Parser as Parser exposing (Parser, oneOf, s, string, (</>))
 
 type Route
     = Root
@@ -12,7 +12,8 @@ parser : Parser (Route -> a) a
 parser =
   oneOf
     [ Parser.map CreateTwoByTwo Parser.top
-    , Parser.map TwoByTwo string
+    , Parser.map CreateTwoByTwo (s "boards")
+    , Parser.map TwoByTwo (s "boards" </> string)
     ]
 
 fromUrl : Url -> Maybe Route
