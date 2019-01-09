@@ -7,11 +7,13 @@ import Json.Decode as Json
 import Svg exposing (Svg)
 import Svg.Attributes as A
 
-import TwoByTwo.Board exposing (Board)
+import TwoByTwo.Board exposing (Board, Card)
 
 type alias Messages msg =
   { updateXAxis : String -> msg
   , updateYAxis : String -> msg
+  , showCardForm : msg
+  , submitCard : String -> msg
   }
 
 type alias AxisConfig msg =
@@ -39,7 +41,7 @@ yAxisConfig updateName =
 
 render : Messages msg -> Board -> Html msg
 render messages board =
-  div [class "l-workspace"] [ renderBoard messages board ]
+  div [class "l-workspace"] [ renderBoard messages board, renderCardList messages board ]
 
 renderBoard : Messages msg -> Board -> Html msg
 renderBoard messages board =
@@ -56,6 +58,30 @@ renderAxis name {containerClass, axis, label, updateName } =
       [ div [class "txt-graph__axis-label-container"] [input [class "txt-graph__axis-label", value name, onChange updateName] []]
       ]
     ]
+
+renderCardList : Messages msg -> Board -> Html msg
+renderCardList messages board =
+  let cards = List.map (renderCard messages) board.cards in
+  let cardForm =
+        if board.showCardForm
+        then renderCardForm messages board
+        else renderNewCardButton messages board
+  in
+
+  div [ class "txt-cards" ] (cards ++ [ cardForm ])
+
+renderCard : Messages msg -> Card -> Html msg
+renderCard messages card =
+  div [class "txt-card"] [text card.text]
+
+renderCardForm : Messages msg -> Board -> Html msg
+renderCardForm messages board =
+  div [class "txt-cards__form"]
+    [input [class "txt-card__form-text", onChange messages.submitCard] [] ]
+
+renderNewCardButton : Messages msg -> Board -> Html msg
+renderNewCardButton messages board =
+  div [class "txt-cards__new", onClick messages.showCardForm] [text "+"]
 
 onChange : (String -> msg) -> Attribute msg
 onChange tagger =

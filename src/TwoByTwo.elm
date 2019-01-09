@@ -6,22 +6,25 @@ import Html exposing (Html)
 import Http
 import Result exposing (Result)
 
-import TwoByTwo.Board exposing (Board)
-import TwoByTwo.Client exposing (BoardData)
+import TwoByTwo.Board exposing (Board, Card)
+import TwoByTwo.Client
 import TwoByTwo.View
 
 type Msg
   = NoOp
-  | InitializeBoard BoardData
+  | InitializeBoard Board
   | UpdateXAxis String
   | UpdateYAxis String
+  | ShowCardForm
+  | SubmitCard String
+  | AddCard Card
 
 type alias Model =
   { navKey : Nav.Key
   , board : Board
   }
 
-create : (Result Http.Error BoardData -> msg) -> Cmd msg
+create : (Result Http.Error Board -> msg) -> Cmd msg
 create toMsg =
   TwoByTwo.Client.create toMsg
 
@@ -33,6 +36,7 @@ init navKey uuid =
             InitializeBoard data
 
           Err err ->
+            let _ = Debug.log "ERROR" err in
             Debug.todo "oh no"
   in
   let board = TwoByTwo.Board.default uuid in
@@ -40,46 +44,87 @@ init navKey uuid =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+  let updateBoard transform board =
+        transform board
+  in
+
   case msg of
     NoOp ->
       (model, Cmd.none)
 
     InitializeBoard data ->
-      let updateBoard board = { board | xAxis = data.xAxis, yAxis = data.yAxis } in
+      let updatedBoard =
+            model.board
+            |> updateBoard (\b -> { b | xAxis = data.xAxis })
+            |> updateBoard (\b -> { b | yAxis = data.yAxis })
+            |> updateBoard (\b -> { b | cards = data.cards })
+      in
 
-      ( { model | board = updateBoard model.board }, Cmd.none )
+      ( { model | board = updatedBoard }, Cmd.none )
 
     UpdateXAxis name ->
-      let updateBoard board = { board | xAxis = name } in
       let toMsg result =
             case result of
               Ok data ->
                 NoOp
 
               Err err ->
+                let _ = Debug.log "ERROR" err in
                 Debug.todo "oh no"
       in
-      let updatedBoard = updateBoard model.board in
+      let updatedBoard = model.board |> updateBoard (\board -> { board | xAxis = name }) in
 
       ({model | board = updatedBoard }, TwoByTwo.Client.update toMsg updatedBoard)
 
     UpdateYAxis name ->
-      let updateBoard board = { board | yAxis = name } in
       let toMsg result =
             case result of
               Ok data ->
                 NoOp
 
               Err err ->
+                let _ = Debug.log "ERROR" err in
                 Debug.todo "oh no"
       in
-      let updatedBoard = updateBoard model.board in
+      let updatedBoard = model.board |> updateBoard (\board -> { board | yAxis = name }) in
 
       ({model | board = updatedBoard }, TwoByTwo.Client.update toMsg updatedBoard)
+
+    ShowCardForm ->
+      let updatedBoard = model.board |> updateBoard (\board -> { board | showCardForm = True }) in
+      ({model | board = updatedBoard }, Cmd.none)
+
+    SubmitCard text ->
+      let toMsg result =
+            case result of
+              Ok card ->
+                AddCard card
+
+              Err err ->
+                let _ = Debug.log "ERROR" err in
+                Debug.todo "oh no"
+      in
+
+      (model, TwoByTwo.Client.createCard toMsg model.board.uuid text)
+
+    AddCard card ->
+      let updatedBoard =
+            model.board
+            |> updateBoard (\b -> { b | showCardForm = False })
+            |> updateBoard (\b -> { b | cards = card :: b.cards })
+      in
+      ({model | board = updatedBoard }, Cmd.none)
 
 
 view : Model -> Document Msg
 view model =
+  let messages =
+        { updateXAxis = UpdateXAxis
+        , updateYAxis = UpdateYAxis
+        , showCardForm = ShowCardForm
+        , submitCard = SubmitCard
+        }
+  in
   { title = "it's a graph y'all"
-  , body = [ TwoByTwo.View.render {updateXAxis = UpdateXAxis, updateYAxis = UpdateYAxis} model.board ]
+  , body = [ TwoByTwo.View.render messages model.board ]
   }
