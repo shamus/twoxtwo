@@ -128,13 +128,23 @@ view model =
     TwoByTwo subModel ->
       TwoByTwo.view subModel |> mapView UpdateTwoByTwo
 
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    case model of
+        TwoByTwo subModel ->
+            Sub.map UpdateTwoByTwo (TwoByTwo.subscriptions subModel)
+
+        _ ->
+            Sub.none
+
 main : Program () Model Msg
 main =
   Browser.application
     { init = init
     , onUrlChange = ChangeUrl
     , onUrlRequest = ClickLink
-    , subscriptions = (\_ -> Sub.none)
+    , subscriptions = subscriptions
     , update = update
     , view = view
     }

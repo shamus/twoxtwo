@@ -77,7 +77,6 @@ html, body {
 
 .txt-graph__x .txt-graph__axis-label {
   margin-left: -100%;
-  text-align: right;
 }
 
 .txt-graph__y .txt-graph__axis-label {
@@ -96,7 +95,8 @@ html, body {
 .txt-graph__axis-label {
   font-size: 16px;
   background-color: #F4FBFF;
-  border: solid 1px black;
+  border: none;
+  text-align: center;
 }
 
 .txt-graph__axis-label:focus {
