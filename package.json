@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "elm:install": "elm install",
+    "test": "testcafe \"chrome:headless\" tests/test.js",
     "elm:make": "elm make ./src/Main.elm --output=./dist/app.js;",
     "http:server": "python -m SimpleHTTPServer 3000"
   },
@@ -13,5 +12,9 @@
   "license": "ISC",
   "dependencies": {
     "elm": "^0.19.0-bugfix2"
+  },
+  "devDependencies": {
+    "testcafe": "^0.23.3",
+    "uuid": "^3.3.2"
   }
 }
