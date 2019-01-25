@@ -1,4 +1,4 @@
-module TwoByTwo.Client exposing (find, create, update, createCard, createPlacement, deletePlacement)
+module TwoByTwo.Client exposing (find, create, update, createCard, createPlacement, deletePlacement, deleteCard)
 
 import Dict exposing (Dict)
 import Http
@@ -11,7 +11,7 @@ import TwoByTwo.Card exposing (Card)
 import TwoByTwo.Coordinates exposing (SvgCoordinates)
 
 base : String
-base = "http://shamus-twobytwo.builtwithdark.localhost:8000"
+base = "https://shamus-twoxtwo.builtwithdark.com"
 
 find : (Result Http.Error Board -> msg) -> String -> Cmd msg
 find toMsg id =
@@ -42,6 +42,18 @@ createCard toMsg boardId text =
     { url = base ++ "/cards"
     , body = Http.jsonBody (encodeCard boardId text)
     , expect = Http.expectJson toMsg cardDecoder
+    }
+
+deleteCard : (Result Http.Error () -> msg) -> String -> Card -> Cmd msg
+deleteCard toMsg boardId card =
+  Http.request
+    { method = "DELETE"
+    , headers = []
+    , url = base ++ "/cards/" ++ card.uuid
+    , body = Http.jsonBody (encodeCard boardId card.text)
+    , expect = Http.expectWhatever toMsg
+    , timeout = Nothing
+    , tracker = Nothing
     }
 
 createPlacement : (Result Http.Error () -> msg) -> String -> (Card, SvgCoordinates) -> Cmd msg

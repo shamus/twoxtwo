@@ -19,9 +19,11 @@ type Msg
   | InitializeBoard Board
   | UpdateXAxis String
   | UpdateYAxis String
-  | ShowCardForm
-  | SubmitCard String
+  | CaptureCard String
+  | SubmitCard
+  | DeleteCard Card
   | AddCard Card
+  | RemoveCard Card
   | DragMsg (Draggable.Msg ())
   | InitializePlacement Card (Draggable.Msg ()) DomCoordinates
   | MovePlacement (Float, Float)
@@ -86,16 +88,30 @@ update msg model =
 
       ( { model | board = updatedBoard }, TwoByTwo.Client.update toMsg updatedBoard )
 
-    ShowCardForm ->
-      ( { model | board = TwoByTwo.Board.showCardForm model.board }, Cmd.none )
+    CaptureCard text ->
+      let updatedBoard = TwoByTwo.Board.updateNewCard text model.board in
 
-    SubmitCard text ->
-      let toMsg = convertHttpResult AddCard in
+      ( { model | board = updatedBoard }, Cmd.none )
 
-      ( model, TwoByTwo.Client.createCard toMsg model.board.uuid text )
+    SubmitCard ->
+      if TwoByTwo.Board.isNewCardPending model.board
+      then
+        let toMsg = convertHttpResult AddCard in
+
+        ( model, TwoByTwo.Client.createCard toMsg model.board.uuid model.board.newCard )
+      else
+        ( model, Cmd.none )
+
+    DeleteCard card ->
+      let toMsg = convertHttpResult (\_ -> RemoveCard card) in
+
+      ( model, TwoByTwo.Client.deleteCard toMsg model.board.uuid card )
 
     AddCard card ->
       ( { model | board = TwoByTwo.Board.addCard card model.board }, Cmd.none )
+
+    RemoveCard card ->
+      ( { model | board = TwoByTwo.Board.removeCard card model.board }, Cmd.none )
 
     DragMsg dragMsg ->
       Draggable.update dragConfig dragMsg model
@@ -139,10 +155,12 @@ view model =
   let messages =
         { updateXAxis = UpdateXAxis
         , updateYAxis = UpdateYAxis
-        , showCardForm = ShowCardForm
+        , captureCard = CaptureCard
         , submitCard = SubmitCard
+        , deleteCard = DeleteCard
         , initializePlacement = InitializePlacement
         , dropPlacement = DropPlacement
+        , noop = NoOp
         }
   in
 

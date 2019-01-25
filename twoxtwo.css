@@ -42,22 +42,36 @@ table {
 	border-spacing: 0;
 }
 
+*:focus {
+  outline-style:none;
+  box-shadow:none;
+  border-color:transparent;
+}
+
 /* twoxtwo */
 
 html, body {
   height: 100%;
+  color: #707577;
+  font-family: 'Dosis', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: normal;
+  letter-spacing: normal;
 }
 
 .l-workspace {
   display: flex;
   align-items: stretch;
   height: 100%;
+  background-color: #f5f5f5
 }
 
 .txt-graph {
   flex: 1;
   padding: 30px;
-  background-color: #F4FBFF;
 }
 
 .txt-graph svg {
@@ -68,72 +82,126 @@ html, body {
 }
 
 .txt-graph__axis {
-  stroke: black;
+  stroke: rgba(98, 109, 95, 0.38);
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .txt-graph__axis-label-container {
   display: inline-block;
 }
 
-.txt-graph__x .txt-graph__axis-label {
-  margin-left: -100%;
+.txt-graph__axis-label {
+  color: #abb1b3;
+  text-transform: uppercase;
 }
 
 .txt-graph__y .txt-graph__axis-label {
-  transform: rotate(90deg);
   margin-left: -50%;
-  margin-top: 50%;
-}
-
-.txt-cards {
-  flex: 0 0 auto;
-  width: 400px;
-  background-color: #EAEDEF;
-  padding: 20px;
+  text-align: center;
 }
 
 .txt-graph__axis-label {
   font-size: 16px;
-  background-color: #F4FBFF;
+  background-color: #f5f5f5;
   border: none;
-  text-align: center;
 }
 
 .txt-graph__axis-label:focus {
   outline: none;
 }
 
-.txt-card {
-  background-color: white;
-  text-align: center;
-  padding: 10px;
-  margin-bottom: 20px;
-  border-radius: 5px;
+.txt-graph__placement {
+  color: #707577;
 }
 
-.txt-cards__new {
+.txt-graph__placement circle {
+  stroke: #707577;
+  fill: #707577;
+}
+
+.txt-cards {
+  flex: 0 0 auto;
+  min-width: 300px;
+  padding: 20px;
+  background-image: linear-gradient(156deg, #e9eae7, #c8c7c7);
+}
+
+.txt-cards__section {
+  margin-bottom: 40px;
+}
+
+.txt-cards__section-header {
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.txt-card {
   display: flex;
-  margin: auto;
-  border-radius: 50%;
-  font-size: 20px;
-  border: solid 1px #DADDDF;
-  height: 50px;
-  width: 50px;
-  align-items: center;
-  justify-content: center;
+  background-color: white;
+  padding: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.23);
+}
+
+.txt-card:last-of-type {
+  margin-bottom: 36px;
+}
+
+.txt-card.is-placed {
+  color: #abb1b3;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.txt-card__text {
+  flex: 1;
+}
+
+.txt-card__delete {
+  padding-top: 2px;
+  color: transparent;
+}
+
+.txt-card:hover .txt-card__delete {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.txt-card__form-input {
+  display: flex;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 .txt-card__form-text {
   width: 100%;
   background-color: white;
-  margin-bottom: 20px;
   padding: 10px;
-  border-radius: 5px;
-  border: solid 1px #DADDDF;
+  border: none;
   box-sizing: border-box;
-  text-align: center;
+  font-size: 16px;
+  color: #707577;
+}
+
+.txt-card__form-button {
+  border: none;
+  box-sizing: border-box;
+  padding: 10px;
+  color: white;
+  background-color: #dbdee0;
+  font-size: 16px;
+}
+
+.txt-card__form-button.is-active {
+  background-color: #3dc5a7;
 }
 
 .txt-graph__placing {
   position: absolute;
+}
+
+.txt-graph__placement-label-container {
+  display: inline-block;
+}
+
+.txt-graph__placement-label {
+  margin-left: -50%;
 }

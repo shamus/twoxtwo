@@ -16,10 +16,12 @@ import TwoByTwo.Coordinates exposing (DomCoordinates, SvgCoordinates)
 type alias Messages msg =
   { updateXAxis : String -> msg
   , updateYAxis : String -> msg
-  , showCardForm : msg
-  , submitCard : String -> msg
+  , captureCard : String -> msg
+  , submitCard : msg
+  , deleteCard : Card -> msg
   , initializePlacement : Card -> (Draggable.Msg ()) -> DomCoordinates -> msg
   , dropPlacement : (Card, DomCoordinates) -> msg
+  , noop : msg
   }
 
 type alias AxisConfig msg =
@@ -32,16 +34,16 @@ type alias AxisConfig msg =
 xAxisConfig : (String -> msg) -> AxisConfig msg
 xAxisConfig updateName =
   { containerClass = "txt-graph__x"
-  , axis = { x1 = "0", y1 = "500", x2 = "1000", y2 = "500" }
-  , label = { x = "990", y = "49%" }
+  , axis = { x1 = "50", y1 = "500", x2 = "950", y2 = "500" }
+  , label = { x = "960", y = "49%" }
   , updateName = updateName
   }
 
 yAxisConfig : (String -> msg) -> AxisConfig msg
 yAxisConfig updateName =
   { containerClass = "txt-graph__y"
-  , axis = { x1 = "500", y1 = "0", x2 = "500", y2 = "1000" }
-  , label = { x = "50%", y = "10" }
+  , axis = { x1 = "500", y1 = "50", x2 = "500", y2 = "950" }
+  , label = { x = "50%", y = "20" }
   , updateName = updateName
   }
 
@@ -63,8 +65,8 @@ renderBoard messages board =
 
 renderAxis : String -> AxisConfig msg -> Svg msg
 renderAxis name {containerClass, axis, label, updateName } =
-  Svg.g [ A.class containerClass ]
-    [ Svg.line [ A.preserveAspectRatio "xMidYMin meet", A.class "txt-graph__axis", A.x1 axis.x1, A.y1 axis.y1, A.x2 axis.x2, A.y2 axis.y2] []
+  Svg.g [ A.class containerClass, A.preserveAspectRatio "xMidYMin meet" ]
+    [ Svg.line [ A.class "txt-graph__axis", A.x1 axis.x1, A.y1 axis.y1, A.x2 axis.x2, A.y2 axis.y2] []
     , Svg.foreignObject [A.x label.x, A.y label.y]
       [ div [class "txt-graph__axis-label-container"] [input [class "txt-graph__axis-label", value name, onChange updateName] []]
       ]
@@ -72,14 +74,28 @@ renderAxis name {containerClass, axis, label, updateName } =
 
 renderCardList : Messages msg -> Board -> Html msg
 renderCardList messages board =
-  let cards = List.map (renderCard messages board) (TwoByTwo.Board.cards board) in
-  let cardForm =
-        if board.showCardForm
-        then renderCardForm messages board
-        else renderNewCardButton messages board
-  in
+  div [ class "txt-cards" ]
+    [ renderUnplacedCards messages board
+    , renderPlacedCards messages board
+    ]
 
-  div [ class "txt-cards" ] (cards ++ [ cardForm ])
+renderUnplacedCards : Messages msg -> Board -> Html msg
+renderUnplacedCards messages board =
+  let cards = List.map (renderCard messages board) (TwoByTwo.Board.unplacedCards board) in
+
+  div [ class "txt-cards__section" ]
+    [ div [ class "txt-cards__section-header" ] [ text "Unplaced" ]
+    , div [] (cards ++ [ renderCardForm messages board ])
+    ]
+
+renderPlacedCards : Messages msg -> Board -> Html msg
+renderPlacedCards messages board =
+  let cards = List.map (renderCard messages board) (TwoByTwo.Board.placedCards board) in
+
+  div [ class "txt-cards__section" ]
+    [ div [ class "txt-cards__section-header" ] [ text "Placed" ]
+    , div [] cards
+    ]
 
 renderCard : Messages msg -> Board -> Card -> Html msg
 renderCard messages board card =
@@ -90,16 +106,19 @@ renderCard messages board card =
         else [ Draggable.customMouseTrigger coordinatesDecoder (messages.initializePlacement card) ]
   in
 
-  div ([classList [ ("txt-card", True), ("is-Placed", placed)]] ++ trigger) [text card.text]
+  div ([classList [ ("txt-card", True), ("is-placed", placed)]] ++ trigger)
+    [ div [class "txt-card__text"] [ text card.text ]
+    , i [class "fas fa-times txt-card__delete", captureMouseDown messages.noop, onClick (messages.deleteCard card) ] []
+    ]
 
 renderCardForm : Messages msg -> Board -> Html msg
 renderCardForm messages board =
-  div [class "txt-cards__form"]
-    [input [class "txt-card__form-text", onChange messages.submitCard] [] ]
-
-renderNewCardButton : Messages msg -> Board -> Html msg
-renderNewCardButton messages board =
-  div [class "txt-cards__new", onClick messages.showCardForm] [text "+"]
+  Html.form [class "txt-cards__form", onSubmit messages.submitCard]
+    [ div [class "txt-card__form-input"]
+      [input [class "txt-card__form-text", placeholder "Add an item", value board.newCard, onInput messages.captureCard] []
+      , button [classList [("txt-card__form-button", True), ("is-active", TwoByTwo.Board.isNewCardPending board)]] [ i [class "fas fa-plus"] [] ]
+      ]
+    ]
 
 renderPlacing : Messages msg -> Board -> List (Html msg)
 renderPlacing messages board =
@@ -118,12 +137,18 @@ renderPlacement messages (card, {x, y}) =
   let trigger = Draggable.customMouseTrigger coordinatesDecoder (messages.initializePlacement card) in
   Svg.g [A.class "txt-graph__placement", trigger]
     [ Svg.circle [A.cx (String.fromFloat x), A.cy (String.fromFloat y), A.r "5"] []
-    , Svg.text_ [A.x (String.fromFloat x), A.y (String.fromFloat (y + 15)) ] [Svg.text card.text ]
+    , Svg.foreignObject [A.x (String.fromFloat x), A.y  (String.fromFloat (y + 15)) ]
+      [ div [class "txt-graph__placement-label-container"] [ div [class "txt-graph__placement-label"] [ text card.text ] ]
+      ]
     ]
 
 onChange : (String -> msg) -> Attribute msg
 onChange tagger =
   stopPropagationOn "change" (Json.map (\a -> (a, True)) (Json.map tagger targetValue))
+
+captureMouseDown : msg -> Attribute msg
+captureMouseDown msg =
+  stopPropagationOn "mousedown" (Json.map (\a -> (a, True)) (Json.succeed msg))
 
 coordinatesDecoder : Json.Decoder DomCoordinates
 coordinatesDecoder =
